@@ -1,0 +1,3 @@
+ip=127.0.0.1
+camera=/dev/video0
+key=2b7e151628aed2a6abf7158809cf4f3c

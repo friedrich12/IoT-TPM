@@ -23,6 +23,7 @@ import (
 	"os"
 	"net"
 	"time"
+    "strings"
 	"io/fs"
 	"io/ioutil"
 	"github.com/oracle/nosql-go-sdk/nosqldb"
@@ -49,6 +50,29 @@ func check(e error){
 	}
 }
 
+type Counter struct {
+    sync.RWMutex
+    c int
+}
+
+func (m *Counter) Get() int {
+    m.RLock()
+    m.RUnlock()
+    return m.c
+}
+
+func (m *Counter) Set(val int) {
+    m.Lock()
+    m.c = val
+    m.Unlock()
+}
+
+var count = &Counter{}
+
+func CAdd(){
+    count.Set(count.Get() + 1)
+}
+
 func getFileStats(filename string) filestats{
 	fileStat, err := os.Stat(filename)
 
@@ -60,7 +84,7 @@ func getFileStats(filename string) filestats{
 	return frez
 }
 
-func UploadToDatabase(fs filestats){
+func UploadToDatabase(fs filestats, num string){
 
 	provider, err := iam.NewSignatureProviderFromFile("/Users/fdoku/.oci/config", "", "", "fdoku")
 	if err != nil {
@@ -86,10 +110,10 @@ func UploadToDatabase(fs filestats){
 	//}
 
 	val := map[string]interface{}{
-		"photoid": "123",
+		"photoid": num,
 		"size": fs.size,
 		"permissions": fs.permissions.String(),
-		"path": "photo.jpg",
+		"path": ("photo" + num + ".jpg"),
 		"modify": fs.modified,
 	}
 
@@ -115,6 +139,8 @@ func handleRequest(conn net.Conn) {
 	buf := bufio.NewReader(conn)
 	rez := ""
 
+    defer conn.Close()
+
 	for {
 		data, err := buf.ReadString('\n')
 		if err != nil{
@@ -123,27 +149,43 @@ func handleRequest(conn net.Conn) {
 		rez += string(data)
 	}
 
-	conn.Write([]byte("Photo received."))
-	conn.Close()
+
+    if strings.Contains(rez, "photo") {
+        dat, err := ioutil.ReadFile(rez)
+
+        if e != nil{
+            conn.Write([]byte("File not found."));
+        }else{
+            conn.Write(dat);
+        }
+    }else{
+
+	    conn.Write([]byte("Photo received."))
+        CAdd()
+
+        num := strconv.Iota(count.Get())
+	    data := []byte(string(rez))
+	    {
+	        err := ioutil.WriteFile("photo" + num + ".jpg", data, 0644)
+		    check(err)
+	    }
+
+	    fs := getFileStats("photo" + num ".jpg")
+
+	    fmt.Println("Size:", fs.size)             // Length in bytes for regular files
+	    fmt.Println("Permissions:", fs.permissions)      // File mode bits
+	    fmt.Println("Last Modified:", fs.modified) // Last modification time
 
 
-	data := []byte(string(rez))
-	{
-	    err := ioutil.WriteFile("photore.jpg", data, 0644)
-		check(err)
-	}
-
-	fs := getFileStats("photore.jpg")
-
-	fmt.Println("Size:", fs.size)             // Length in bytes for regular files
-	fmt.Println("Permissions:", fs.permissions)      // File mode bits
-	fmt.Println("Last Modified:", fs.modified) // Last modification time
-
-	go UploadToDatabase(fs);
+	    go UploadToDatabase(fs, num);
+    }
 }
 
 
 func main(){
+
+    count.Set(0)
+
 	l, err := net.Listen(CONN_TYPE, CONN_HOST+":"+CONN_PORT)
 	if err != nil {
 		fmt.Println("Error listening:", err.Error())

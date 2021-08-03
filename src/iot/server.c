@@ -55,7 +55,7 @@ void server_init(Server * server, int port)
 	}
 }
 
-void server_run(Server * server, char * cert_file_path)
+void server_run(Server * server, char * cert_file_path, char * aes_key)
 {
 	/* Listen for connection */
 	if ((listen(server->sockfd, 5)) != 0) {
@@ -81,7 +81,10 @@ void server_run(Server * server, char * cert_file_path)
 	int rez = cerv_validate(&server->cerv);
 	if (rez) {
 		/* Encrypt key using cert and send to client */
-		char		  text[256] = "Friedrich\0";
+		char text[256];
+		for (int i = 0; i < 17; i++) {
+			text[i] = aes_key[i];
+		}
 		unsigned char encrypted[256];
 		cerv_encrypt(inter_data, text, strlen(text), encrypted);
 		send(server->connfd, encrypted, 256, 0);

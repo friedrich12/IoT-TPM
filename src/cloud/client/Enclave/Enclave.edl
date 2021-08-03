@@ -9,7 +9,9 @@ enclave {
 		public void ecall_start_tls_client(
             [in, string]const char* inter,
             [in, string]const char* priv,
-            [in, string]const char* ip
+            [in, string]const char* iot_ip,
+            [in, string]const char* serverip,
+            [in, string]char* filedata
         );
 	};
 

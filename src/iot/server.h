@@ -43,7 +43,7 @@ char * get_cert(int sockfd);
 
 void server_init(Server * server, int port);
 
-void server_run(Server * server, char * cert_file_path);
+void server_run(Server * server, char * cert_file_path, char * aes_key);
 
 void server_shutdown(Server * server);
 

@@ -22,6 +22,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <inttypes.h>
+#include <openssl/aes.h>
 
 /* To get images from the camera*/
 #include "cam.h"
@@ -31,5 +32,17 @@
 
 /* To communicate with the sever*/
 #include "client.h"
+
+
+struct runner {
+	Client		cli;
+	ImageGetter imget;
+	uint8_t *	key;
+	char *		camera;
+	char *		ip;
+};
+
+typedef struct runner runner;
+
 
 #endif
