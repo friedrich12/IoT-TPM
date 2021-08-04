@@ -1,6 +1,6 @@
 # RedSGX
 
-![redsgx](https://github.com/friedrich12/redsgx/img/redsgx.png)
+![redsgx](https://github.com/friedrich12/redsgx/blob/main/src/img/redsgx.png?raw=true)
 
 RedSGX is an opensource protocol that stores files in the cloud while utilizing the power of Intel SGX, a trusted platform module. Files are encrypted on IoT devices and sent to the cloud. Files are decrypted in the TPM of a trusted PC using Intel SGX.
 
