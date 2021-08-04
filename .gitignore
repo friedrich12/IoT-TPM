@@ -30,4 +30,5 @@
 *.exe
 *.out
 *.app
+*.DS_Store
 src/cloud/client/app
